@@ -1,51 +1,17 @@
-import Fastify from 'fastify';
+import Fastify from "fastify";
+import cors from "@fastify/cors";
 
-const app = Fastify({
-  logger: true,
+export const app = Fastify({
+  logger: true
 });
 
-// Basic health check route
-app.get('/health', async (request, reply) => {
-  return { status: 'ok', message: 'Server is running' };
+app.register(cors, {
+  origin: true
 });
 
-// Get user wallet
-app.get('/api/wallet/:address', async (request, reply) => {
-  const { address } = request.params as { address: string };
+app.get("/health", async () => {
   return {
-    address,
-    balance: '1000.00',
-    currency: 'XLM',
+    status: "ok",
+    service: "stellarpay-backend"
   };
 });
-
-// Create transaction
-app.post('/api/transaction', async (request, reply) => {
-  const body = request.body as {
-    from: string;
-    to: string;
-    amount: string;
-  };
-  
-  return {
-    transactionId: 'TXN_123456',
-    status: 'pending',
-    from: body.from,
-    to: body.to,
-    amount: body.amount,
-  };
-});
-
-// Start server
-const start = async () => {
-  try {
-    const PORT = process.env.PORT || 3000;
-    await app.listen({ port: Number(PORT), host: '0.0.0.0' });
-    console.log(`Server running on port ${PORT}`);
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
-};
-
-start();
