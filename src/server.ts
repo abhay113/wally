@@ -1,17 +1,16 @@
 import { app } from "./app";
 import { env } from "./config/env";
+import { registerRoutes } from "./routes";
 
 const start = async () => {
-  try {
-    await app.listen({
-      port: env.PORT,
-      host: "0.0.0.0"
-    });
-    console.log(`🚀 StellarPay running on port ${env.PORT}`);
-  } catch (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
+  registerRoutes(app);
+
+  await app.listen({
+    port: env.PORT,
+    host: "0.0.0.0"
+  });
+
+  console.log(`🚀 Wally running on port ${env.PORT}`);
 };
 
 start();
