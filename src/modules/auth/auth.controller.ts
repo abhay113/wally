@@ -1,24 +1,43 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { getAdminToken, createUser, loginUser } from "./auth.service";
+import {
+  getAdminToken,
+  createUser,
+  getUserIdByEmail,
+  assignUserToGroup,
+  sendVerificationEmail,
+} from "./auth.service";
 
-export const register = async (
-  req: FastifyRequest<{ Body: { email: string; password: string } }>,
-  reply: FastifyReply,
-) => {
-  const { email, password } = req.body;
-
-  const token = await getAdminToken();
-  await createUser(token, email, password);
-
-  return reply.code(201).send({
-    message: "User registered successfully",
-  });
+type RegisterBody = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
 };
 
-export const login = async (
-  req: FastifyRequest<{ Body: { email: string; password: string } }>,
+export const register = async (
+  req: FastifyRequest<{ Body: RegisterBody }>,
   reply: FastifyReply,
 ) => {
-  const data = await loginUser(req.body.email, req.body.password);
-  return reply.send(data);
+  const { email, password, firstName, lastName } = req.body;
+
+  try {
+    const adminToken = await getAdminToken();
+
+    await createUser(adminToken, email, password, firstName, lastName);
+
+    const userId = await getUserIdByEmail(adminToken, email);
+
+    await assignUserToGroup(adminToken, userId);
+
+    await sendVerificationEmail(adminToken, userId);
+
+    return reply.code(201).send({
+      message: "Registration successful. Please verify your email.",
+    });
+  } catch (err: any) {
+    return reply.code(400).send({
+      error: "Registration failed",
+      details: err.response?.data || err.message,
+    });
+  }
 };
